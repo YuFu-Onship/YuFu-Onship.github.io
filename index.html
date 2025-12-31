@@ -1,1 +1,156 @@
-<h1>Hello, World! </h1>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YuFu-Onship's Docs</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <style>
+        /* --- Fluent UI 风格精简 CSS --- */
+        :root {
+            --fluent-bg: #f3f2f1; /* 微软浅灰背景 */
+            --fluent-card-bg: #ffffff;
+            --fluent-text: #201f1e;
+            --fluent-accent: #0078d4; /* 微软蓝 */
+            --fluent-border: #edebe9;
+            --shadow-depth-8: 0 3.2px 7.2px 0 rgba(0,0,0,0.132), 0 0.6px 1.8px 0 rgba(0,0,0,0.108);
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background-color: var(--fluent-bg);
+            color: var(--fluent-text);
+            margin: 0;
+            display: flex;
+            height: 100vh; /* 全屏高度 */
+            overflow: hidden;
+        }
+
+        /* 左侧侧边栏 */
+        .sidebar {
+            width: 280px;
+            background-color: var(--fluent-card-bg);
+            border-right: 1px solid var(--fluent-border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--fluent-accent);
+        }
+
+        /* 文档列表链接样式 */
+        .doc-link {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: var(--fluent-text);
+            border-radius: 4px;
+            margin-bottom: 5px;
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .doc-link:hover {
+            background-color: #edebe9;
+        }
+
+        .doc-link.active {
+            background-color: #c7e0f4;
+            color: #004578;
+            font-weight: 500;
+        }
+
+        /* 右侧主内容区 */
+        .main-content {
+            flex-grow: 1;
+            padding: 30px 40px;
+            overflow-y: auto; /* 允许内容滚动 */
+        }
+
+        /* Markdown 内容容器卡片 */
+        #markdown-viewer {
+            background-color: var(--fluent-card-bg);
+            padding: 40px;
+            max-width: 900px;
+            margin: 0 auto; /* 居中 */
+            box-shadow: var(--shadow-depth-8);
+            border-radius: 8px;
+            min-height: 300px;
+        }
+
+        /* Markdown 内部元素简单样式 */
+        #markdown-viewer h1 { color: var(--fluent-accent); border-bottom: 1px solid var(--fluent-border); padding-bottom: 10px; }
+        #markdown-viewer h2 { margin-top: 1.5em; }
+        #markdown-viewer code { background-color: #f3f2f1; padding: 2px 4px; border-radius: 4px; font-family: consolas, monospace;}
+        #markdown-viewer pre { background-color: #2d2d2d; color: #f8f8f2; padding: 15px; border-radius: 6px; overflow-x: auto; }
+        #markdown-viewer pre code { background-color: transparent; color: inherit; }
+        #markdown-viewer blockquote { border-left: 4px solid var(--fluent-accent); margin: 0; padding-left: 15px; color: #666; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">📄 文档目录</div>
+        <div id="file-list">
+            <a class="doc-link" onclick="loadDoc(this, 'intro.md')">项目介绍 (Intro)</a>
+            </div>
+    </nav>
+
+    <main class="main-content">
+        <div id="markdown-viewer">
+            <h2 style="text-align: center; color: #666;">
+                👈 请在左侧选择要阅读的文档
+            </h2>
+        </div>
+    </main>
+
+    <script>
+        const viewer = document.getElementById('markdown-viewer');
+        const links = document.querySelectorAll('.doc-link');
+
+        // 核心函数：加载并渲染 Markdown
+        async function loadDoc(element, filename) {
+            // 1. 更新侧边栏激活状态 UI
+            links.forEach(link => link.classList.remove('active'));
+            element.classList.add('active');
+
+            // 2. 显示加载中提示
+            viewer.innerHTML = '<p style="color:#666;">正在加载 ' + filename + '...</p>';
+
+            try {
+                // 3. 请求 doc 文件夹下的文件
+                const response = await fetch(`./doc/${filename}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                // 4. 获取文本内容
+                const markdownText = await response.text();
+                
+                // 5. 使用 marked.js 转换为 HTML 并注入容器
+                viewer.innerHTML = marked.parse(markdownText);
+                
+            } catch (error) {
+                console.error('Error loading markdown:', error);
+                viewer.innerHTML = `<h3 style="color: #d13438;">加载失败</h3><p>无法找到文件: ./doc/${filename}</p><p>请检查文件名是否正确，或是否已推送到 GitHub。</p>`;
+            }
+        }
+
+        // 可选：页面加载时自动打开第一个文档
+        // if (links.length > 0) {
+        //     links[0].click();
+        // }
+    </script>
+
+</body>
+</html>
