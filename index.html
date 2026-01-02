@@ -140,7 +140,14 @@ html, body {
 #content {
     max-width: 820px;
     font-size: 1.2rem;
-    line-height: 1.6;
+    line-height: 1.4;
+}
+
+
+pre code[class*="language-"] {
+    /* color: #a5d6ff; */
+    font-size: 1rem;
+    line-height: 1.1;
 }
 
 /* ===== Typing cursor ===== */
@@ -327,6 +334,33 @@ function typeHTML(html, totalTime = 100) {
             stopTyping();
             content.classList.remove("typing");
         }
+        if (i >= len) {
+            stopTyping();
+            content.classList.remove("typing");
+
+        // 完美的语言标签处理
+        const codeBlocks = content.querySelectorAll('pre code');
+        codeBlocks.forEach(code => {
+            const className = code.className; // 获取如 "language-glsl"
+            if (className.startsWith('language-')) {
+                const lang = className.replace('language-', '').toUpperCase();
+                const label = document.createElement('div');
+                label.innerText = lang;
+                // 设置标签样式
+                Object.assign(label.style, {
+                    position: 'absolute',
+                    top: '5px',
+                    right: '10px',
+                    fontSize: '1.1rem',
+                    color: 'var(--amber)',
+                    opacity: '0.5',
+                    letterSpacing: '1px'
+                });
+                code.parentElement.style.position = 'relative';
+                code.parentElement.appendChild(label);
+            }
+        });
+    }
     }, interval);
 }
 
