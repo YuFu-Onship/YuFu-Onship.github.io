@@ -3,325 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YuFu-Onship :: TERMINAL</title>
+    <title>Terminal Doc Reader</title>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    
     <style>
-        /* --- TUI / Cyberpunk Terminal CSS --- */
         :root {
-            --term-bg: #0a0a0a;
-            --term-color: #ffb000; /* 经典的琥珀色/橙色 */
-            --term-dim: #996600;
-            --term-accent: #ffcc00;
-            --scanline: rgba(0, 0, 0, 0.5);
-            --glow: 0 0 5px rgba(255, 176, 0, 0.4), 0 0 10px rgba(255, 176, 0, 0.2);
-            --font-stack: 'VT323', monospace;
+            --amber: #ffb000;
+            --amber-dim: #936500;
+            --bg-color: #120b00;
+            --font-family: 'Courier New', Courier, monospace;
         }
 
-        body {
-            background-color: var(--term-bg);
-            color: var(--term-color);
-            font-family: var(--font-stack);
-            font-size: 1.2rem;
-            margin: 0;
+        body, html {
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--amber);
+            font-family: var(--font-family);
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* 布局框架 */
+        #app {
             display: flex;
             height: 100vh;
+            border: 2px solid var(--amber);
+            box-sizing: border-box;
+            margin: 5px;
+        }
+
+        /* 左侧侧边栏 */
+        #sidebar {
+            width: 250px;
+            border-right: 2px solid var(--amber);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
-            /* 文字发光效果 */
-            text-shadow: var(--glow);
-        }
-
-        /* --- CRT 屏幕效果层 --- */
-        body::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0;
-            left: 0;
-            bottom: 0;
-            right: 0;
-            background: linear-gradient(
-                to bottom,
-                rgba(18, 16, 16, 0) 50%,
-                rgba(0, 0, 0, 0.25) 50%
-            );
-            background-size: 100% 4px;
-            z-index: 999;
-            pointer-events: none;
-            animation: scanlines 10s linear infinite;
-        }
-
-        /* 屏幕整体微闪 */
-        @keyframes flicker {
-            0% { opacity: 0.97; }
-            5% { opacity: 0.95; }
-            10% { opacity: 0.9; }
-            15% { opacity: 0.95; }
-            20% { opacity: 0.99; }
-            50% { opacity: 0.95; }
-            80% { opacity: 0.9; }
-            100% { opacity: 0.97; }
-        }
-        
-        #app-container {
-            display: flex;
-            width: 100%;
-            height: 100%;
-            animation: flicker 0.15s infinite; /* 极速微闪 */
-            z-index: 1;
-        }
-
-        /* 滚动条样式自定义 */
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: #111; border-left: 1px solid var(--term-dim); }
-        ::-webkit-scrollbar-thumb { background: var(--term-dim); border: 1px solid var(--term-color); }
-        ::-webkit-scrollbar-thumb:hover { background: var(--term-color); }
-
-        /* --- 左侧侧边栏 --- */
-        .sidebar {
-            width: 260px;
-            background-color: #000;
-            border-right: 2px solid var(--term-color);
-            padding: 20px;
             display: flex;
             flex-direction: column;
-            box-sizing: border-box;
-            position: relative;
+            white-space: nowrap;
         }
 
-        .sidebar-header {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px dashed var(--term-dim);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-        
-        .sidebar-header::before {
-            content: "> ";
-            animation: blink 1s step-end infinite;
+        #sidebar.collapsed {
+            width: 40px;
         }
 
-        /* 文档链接样式 */
-        .doc-link {
-            display: block;
-            padding: 8px 10px;
-            text-decoration: none;
-            color: var(--term-color);
-            border: 1px solid transparent;
-            margin-bottom: 8px;
+        /* 侧边栏头部/开关 */
+        #toggle-btn {
+            padding: 15px;
             cursor: pointer;
-            transition: all 0.1s;
-            font-size: 1.3rem;
-        }
-
-        .doc-link:hover {
-            border: 1px solid var(--term-dim);
-            background-color: rgba(255, 176, 0, 0.1);
-        }
-
-        .doc-link.active {
-            background-color: var(--term-color);
-            color: #000; /* 反色 */
+            border-bottom: 1px solid var(--amber-dim);
+            text-align: center;
             font-weight: bold;
-            box-shadow: 0 0 10px var(--term-color);
-            text-shadow: none;
         }
 
-        .doc-link.active::before {
-            content: "[x] ";
-        }
-        .doc-link:not(.active)::before {
-            content: "[ ] ";
-        }
+        #toggle-btn:hover { background: var(--amber-dim); color: var(--bg-color); }
 
-        /* --- 右侧主内容区 --- */
-        .main-content {
+        /* 文章列表 */
+        #nav-list {
+            padding: 10px;
+            list-style: none;
+            margin: 0;
+            overflow-y: auto;
             flex-grow: 1;
-            padding: 0;
+        }
+
+        .nav-item {
+            padding: 8px 5px;
+            cursor: pointer;
+            border: 1px transparent;
+            margin-bottom: 5px;
+        }
+
+        .nav-item:hover {
+            background-color: var(--amber-dim);
+            color: var(--bg-color);
+        }
+
+        /* 右侧内容区 */
+        #main-content {
+            flex-grow: 1;
+            padding: 20px;
             overflow-y: auto;
             position: relative;
-            background-image: radial-gradient(circle at center, #111 0%, #000 100%);
         }
 
-        /* 内容区顶部状态栏 */
-        .status-bar {
-            background: var(--term-color);
-            color: #000;
-            padding: 5px 20px;
-            font-size: 1rem;
-            display: flex;
-            justify-content: space-between;
-            text-shadow: none;
-            font-weight: bold;
-            position: sticky;
-            top: 0;
-            z-index: 100;
+        /* 文章元数据信息 */
+        #meta-info {
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            border-bottom: 1px dashed var(--amber);
+            padding-bottom: 10px;
+            opacity: 0.8;
         }
 
-        #markdown-viewer {
-            padding: 40px 60px;
-            max-width: 900px;
-            margin: 0 auto;
+        /* Markdown 内容样式 */
+        #content-area {
             line-height: 1.6;
         }
 
-        /* Markdown 内部元素样式 TUI化 */
-        #markdown-viewer h1 { 
-            color: var(--term-accent); 
-            border-bottom: 2px double var(--term-color); 
-            padding-bottom: 10px; 
-            text-transform: uppercase;
-        }
-        #markdown-viewer h2 { 
-            margin-top: 1.5em; 
-            color: var(--term-color);
-            border-bottom: 1px dashed var(--term-dim); 
-        }
-        #markdown-viewer a { color: #fff; text-decoration: underline; }
-        #markdown-viewer strong { color: #fff; }
-        
-        #markdown-viewer code { 
-            background-color: #222; 
-            color: #fff;
-            padding: 2px 6px; 
-            font-family: 'Courier New', monospace;
-            border: 1px solid #444;
-        }
-        
-        #markdown-viewer pre { 
-            background-color: #111; 
-            border: 1px solid var(--term-dim); 
-            padding: 15px; 
-            overflow-x: auto; 
-            position: relative;
-        }
-        
-        #markdown-viewer blockquote { 
-            border-left: 4px solid var(--term-dim); 
-            margin: 0; 
-            padding-left: 15px; 
-            color: var(--term-dim);
-            font-style: italic;
-        }
-        
-        #markdown-viewer img {
-            max-width: 100%;
-            filter: grayscale(100%) sepia(100%) hue-rotate(0deg) saturate(500%); /* 图片也变成橙色风格 */
-            border: 1px solid var(--term-dim);
+        #content-area h1, #content-area h2 { border-bottom: 1px solid var(--amber-dim); }
+        #content-area code { background: #2a1a00; padding: 2px 5px; }
+
+        /* 打字机效果光标 */
+        .typing::after {
+            content: '_';
+            animation: blink 1s infinite;
         }
 
-        /* 动画关键帧 */
-        @keyframes blink { 50% { opacity: 0; } }
-        
-        /* 故障加载效果 */
-        .glitch-load {
-            animation: glitch-anim 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-        }
-        @keyframes glitch-anim {
-            0% { transform: translate(0) }
-            20% { transform: translate(-2px, 2px) }
-            40% { transform: translate(-2px, -2px) }
-            60% { transform: translate(2px, 2px) }
-            80% { transform: translate(2px, -2px) }
-            100% { transform: translate(0) }
+        @keyframes blink {
+            50% { opacity: 0; }
         }
 
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            body { height: auto; overflow: auto; }
-            #app-container { flex-direction: column; }
-            .sidebar { width: 100%; border-right: none; border-bottom: 2px solid var(--term-color); height: auto; }
-            .main-content { height: calc(100vh - 200px); }
-            #markdown-viewer { padding: 20px; }
-        }
+        /* 滚动条美化 */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-color); }
+        ::-webkit-scrollbar-thumb { background: var(--amber-dim); }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
-        <nav class="sidebar">
-            <div class="sidebar-header">SYSTEM_ROOT</div>
-            <div id="file-list">
-                <a class="doc-link" onclick="loadDoc(this, 'intro.md')">intro.md</a>
-            </div>
-            
-            <div style="margin-top: auto; font-size: 0.8rem; color: var(--term-dim); border-top: 1px solid var(--term-dim); padding-top: 10px;">
-                <p>STATUS: ONLINE</p>
-                <p>MEM: 64KB OK</p>
-            </div>
-        </nav>
+<div id="app">
+    <aside id="sidebar">
+        <div id="toggle-btn" onclick="toggleSidebar()"> [ 目录 ] </div>
+        <ul id="nav-list">
+            <li>Loading...</li>
+        </ul>
+    </aside>
 
-        <main class="main-content">
-            <div class="status-bar">
-                <span id="doc-title">NO_FILE_LOADED</span>
-                <span id="clock">00:00:00</span>
-            </div>
-            <div id="markdown-viewer">
-                <div style="text-align: center; margin-top: 100px;">
-                    <pre style="display:inline-block; border:none; background:none; text-align:left;">
-   _____ YUFU-ONSHIP _____
-  /     \             /     \
- |  (o)  | TERMINAL  |  (o)  |
-  \_____/             \_____/
-                    </pre>
-                    <p class="blink" style="margin-top:20px;">> WAITING FOR INPUT_</p>
-                </div>
-            </div>
-        </main>
-    </div>
+    <main id="main-content">
+        <div id="meta-info">Ready to process...</div>
+        <article id="content-area"></article>
+    </main>
+</div>
 
-    <script>
-        const viewer = document.getElementById('markdown-viewer');
-        const docTitle = document.getElementById('doc-title');
-        const links = document.querySelectorAll('.doc-link');
+<script>
+    let isCollapsed = false;
+    const contentArea = document.getElementById('content-area');
+    const metaInfo = document.getElementById('meta-info');
 
-        // 简单的时钟功能
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toLocaleTimeString();
-        }, 1000);
+    // 1. 切换侧边栏
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const btn = document.getElementById('toggle-btn');
+        isCollapsed = !isCollapsed;
 
-        // 打字机/故障效果渲染
-        async function loadDoc(element, filename) {
-            // 1. UI 更新
-            links.forEach(link => link.classList.remove('active'));
-            element.classList.add('active');
-            docTitle.innerText = filename.toUpperCase();
+        if (isCollapsed) {
+            sidebar.classList.add('collapsed');
+            btn.innerHTML = " > ";
+        } else {
+            sidebar.classList.remove('collapsed');
+            btn.innerHTML = "[ 目录 ]";
+        }
+    }
 
-            // 2. 模拟加载动画
-            viewer.innerHTML = '<p class="blink">> ESTABLISHING CONNECTION...</p><p>> DOWNLOADING PACKETS...</p>';
-            viewer.classList.add('glitch-load'); // 添加故障抖动
+    // 2. 加载 JSON 数据
+    async function loadConfig() {
+        try {
+            const response = await fetch('index.json');
+            const data = await response.json();
+            renderNav(data);
+        } catch (err) {
+            metaInfo.innerText = "Error: 无法加载 index.json";
+        }
+    }
 
-            try {
-                // 3. 模拟网络延迟 (为了看来更像旧电脑)
-                await new Promise(r => setTimeout(r, 600));
+    // 3. 渲染导航列表
+    function renderNav(articles) {
+        const navList = document.getElementById('nav-list');
+        navList.innerHTML = '';
+        articles.forEach(art => {
+            const li = document.createElement('li');
+            li.className = 'nav-item';
+            li.innerHTML = `> ${art.title}`;
+            li.onclick = () => loadArticle(art);
+            navList.appendChild(li);
+        });
+    }
 
-                const response = await fetch(`./doc/${filename}`);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                
-                const markdownText = await response.text();
-                
-                // 4. 移除故障效果并渲染
-                viewer.classList.remove('glitch-load');
-                viewer.innerHTML = marked.parse(markdownText);
+    // 4. 加载并展示 Markdown 文章
+    async function loadArticle(art) {
+        contentArea.innerHTML = '';
+        contentArea.classList.add('typing');
+        metaInfo.innerHTML = `TITLE: ${art.title} | AUTHOR: ${art.author} | DATE: ${art.date} | CAT: ${art.category}`;
 
-            } catch (error) {
-                viewer.classList.remove('glitch-load');
-                viewer.innerHTML = `
-                    <h2 style="color: red; border-bottom: 2px solid red;">ERROR: 404_NOT_FOUND</h2>
-                    <p>> The file ./doc/${filename} seems to be corrupted or missing.</p>
-                    <p>> SYSTEM HALTED.</p>
-                `;
+        try {
+            const response = await fetch(art.path);
+            const text = await response.text();
+            const htmlContent = marked.parse(text);
+
+            // 打字机效果显示
+            typeWriter(htmlContent);
+        } catch (err) {
+            contentArea.innerHTML = "Error: 无法读取文章文件内容。";
+        }
+    }
+
+    // 5. 打字机输出逻辑
+    function typeWriter(html) {
+        let i = 0;
+        contentArea.innerHTML = "";
+
+        // 为了性能和HTML标签安全，这里采用分块插入
+        // 如果想实现逐字，HTML解析会比较复杂，这里使用“快速呈现”逻辑
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const nodes = Array.from(tempDiv.childNodes);
+
+        let nodeIndex = 0;
+        function renderNode() {
+            if (nodeIndex < nodes.length) {
+                contentArea.appendChild(nodes[nodeIndex].cloneNode(true));
+                nodeIndex++;
+                // 这里的速度可以调节，20ms 是一个比较流畅的“终端”感
+                setTimeout(renderNode, 20);
+                contentArea.scrollTop = contentArea.scrollHeight;
+            } else {
+                contentArea.classList.remove('typing');
             }
         }
+        renderNode();
+    }
 
-        // 初始化时钟
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-    </script>
+    // 初始化
+    loadConfig();
+</script>
 
 </body>
 </html>
