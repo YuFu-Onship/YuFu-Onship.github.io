@@ -1,9 +1,9 @@
 [
   {
-    "title": "测试",
-    "category": "test",
-    "path": "doc/test.md",
-    "date": "2026-01-2",
-    "author": "yufu"
+    "title": "Love2D光照实现",
+    "category": "shader",
+    "path": "doc/love2d光照实现.md",
+    "date": "2026-01-3",
+    "author": "YUFU"
   }
 ]
