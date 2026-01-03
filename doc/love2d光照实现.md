@@ -15,8 +15,8 @@ $$
 $$
 L(d)=
 \begin{cases}
-1, & d \le r_i \\
-A(t), & r_i < d < r_o \\
+1, & d \le r_i \\\\
+A(t), & r_i < d < r_o \\\\
 0, & d \ge r_o
 \end{cases}
 $$
