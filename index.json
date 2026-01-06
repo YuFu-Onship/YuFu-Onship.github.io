@@ -5,5 +5,12 @@
     "path": "doc/love2d光照实现.md",
     "date": "2026-01-3",
     "author": "YUFU"
+  },
+  {
+    "title": "Love2D泛光实现",
+    "category": "shader",
+    "path": "doc/love2d泛光实现.md",
+    "date": "2026-01-6",
+    "author": "YUFU"
   }
 ]
