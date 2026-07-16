@@ -425,6 +425,9 @@
                 scroll-behavior: auto;
                 position: relative;
                 background: var(--winui-content-bg);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
             }
 
             @media (max-width: 768px) {
@@ -443,6 +446,8 @@
                 justify-content: space-between;
                 font-weight: 500;
                 text-transform: uppercase;
+                width: 100%;
+                max-width: 800px;
             }
 
             /* ============================================================
@@ -450,6 +455,7 @@
                ============================================================ */
             #progress-track {
                 width: 100%;
+                max-width: 800px;
                 height: 3px;
                 background: var(--winui-stroke);
                 margin-bottom: 32px;
@@ -473,6 +479,7 @@
                CONTENT TYPOGRAPHY
                ============================================================ */
             #content {
+                width: 100%;
                 max-width: 800px;
                 font-size: 1.05rem;
                 line-height: 1.75;
@@ -639,6 +646,8 @@
                HOME VIEW
                ============================================================ */
             .home {
+                width: 100%;
+                max-width: 800px;
                 height: 60vh;
                 display: flex;
                 flex-direction: column;
